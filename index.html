@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>猜拳冒險王</title>
+<style>
+:root{--pink:#ff7fa8;--purple:#8b7cf6;--ink:#39334d;--cream:#fffaf2;--mint:#a7ead7}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;color:var(--ink);background:linear-gradient(135deg,#fff0f5,#f0edff 55%,#e9fff8);min-height:100vh;padding:24px 14px}
+main{max-width:850px;margin:auto}
+header{text-align:center;padding:12px 0 18px}
+.logo{font-size:48px;filter:drop-shadow(0 4px 0 #ffffff)}
+h1{font-size:clamp(30px,5vw,44px);margin:4px 0;color:#6c5bd4}
+.subtitle{margin:0;color:#766d8f}
+.panel{background:#ffffffd9;border:2px solid #fff;border-radius:24px;padding:22px;margin:14px 0;box-shadow:0 10px 28px #6c5bd41a}
+h2{font-size:20px;margin:0 0 14px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.field{flex:1;min-width:210px}
+label{display:block;font-weight:700;margin-bottom:7px}
+input{width:100%;padding:12px 14px;border:2px solid #e4defa;border-radius:12px;font:inherit;outline:none}
+input:focus{border-color:var(--purple)}
+.equipment{flex:1;min-width:160px;border:2px solid #e8e2fa;border-radius:16px;padding:14px;background:#fff;text-align:left;cursor:pointer;color:var(--ink);font:inherit;transition:.15s}
+.equipment:hover{transform:translateY(-2px)}
+.equipment.selected{border-color:var(--pink);background:#fff0f5;box-shadow:0 0 0 2px #ff7fa833}
+.equipment strong{display:block;font-size:17px;margin:5px 0}
+.equipment small{color:#766d8f;line-height:1.5;display:block}
+button{font:inherit}
+.primary,.choice,.secondary{border:0;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer;transition:.15s}
+.primary{background:linear-gradient(135deg,var(--pink),#ff9a9e);color:white;box-shadow:0 5px 0 #e86e99}
+.primary:hover,.choice:hover,.secondary:hover{transform:translateY(-2px)}
+.primary:active{transform:translateY(2px);box-shadow:0 2px 0 #e86e99}
+.center{text-align:center}
+.start{width:100%;margin-top:16px}
+.status{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+.stat{background:#f7f4ff;border-radius:15px;padding:13px 8px}
+.stat span{display:block;font-size:13px;color:#766d8f}
+.stat strong{font-size:25px;color:#6c5bd4}
+.arena{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.fighter{background:#fff7fb;border:2px dashed #f6c5d6;border-radius:18px;padding:18px;text-align:center}
+.fighter:nth-child(2){background:#f6f4ff;border-color:#d1c8ff}
+.fighter .emoji{font-size:48px;display:block;margin:4px}
+.fighter strong{display:block}
+.fighter p{margin:7px 0 0;color:#766d8f;font-size:14px}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.choice{background:white;border:2px solid #e6e0fa;color:var(--ink);font-size:18px;padding:16px 8px;box-shadow:0 4px 0 #e6e0fa}
+.choice span{display:block;font-size:34px;margin-bottom:5px}
+.choice:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.message{margin-top:16px;padding:14px;border-radius:14px;background:#f7f4ff;text-align:center;font-weight:700;min-height:52px}
+.message.win{background:#e8fff5;color:#16765d}
+.message.lose{background:#fff0f3;color:#ad4568}
+.message.draw{background:#fff8df;color:#8b6b18}
+.bottom{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.secondary{background:#eeeaff;color:#6c5bd4;flex:1}
+.hidden{display:none!important}
+.note{font-size:13px;color:#766d8f;line-height:1.6;margin-top:12px}
+footer{text-align:center;color:#8a829f;font-size:12px;padding:10px}
+@media(max-width:520px){.panel{padding:17px}.status{gap:6px}.stat strong{font-size:21px}.arena{gap:8px}.fighter{padding:12px 6px}.choices{gap:7px}.choice{font-size:15px;padding:12px 4px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="logo">🗺️ ✨ ✊</div>
+  <h1>猜拳冒險王</h1>
+  <p class="subtitle">選好裝備，挑戰電腦冒險者！先拿下 5 勝就過關！</p>
+</header>
+
+<section class="panel" id="setup">
+  <h2>🧙 冒險者登入</h2>
+  <div class="row">
+    <div class="field">
+      <label for="playerName">冒險者名字</label>
+      <input id="playerName" maxlength="20" placeholder="例如：勇者小恩" value="勇者">
+    </div>
+    <div class="field">
+      <label for="gearName">選擇你的裝備</label>
+      <input id="gearName" readonly value="魔法魔杖">
+    </div>
+  </div>
+  <h2 style="margin-top:20px">🎒 選擇一項裝備</h2>
+  <div class="row" id="gearOptions">
+    <button class="equipment" data-gear="keyboard">
+      <span>⌨️</span><strong>黃金鍵盤</strong>
+      <small>每回合有機會發動「金色護盾」，平手時獲得額外鼓勵提示。</small>
+    </button>
+    <button class="equipment selected" data-gear="wand">
+      <span>🪄</span><strong>魔法魔杖</strong>
+      <small>每局可使用一次「魔法預言」，看看電腦這回合可能出的拳。</small>
+    </button>
+    <button class="equipment" data-gear="shield">
+      <span>🛡️</span><strong>勇者盾牌</strong>
+      <small>落後時可使用一次「勇氣加成」，本回合平手也算你的小勝利。</small>
+    </button>
+  </div>
+  <button class="primary start" id="startBtn">🚀 開始冒險！</button>
+  <p class="note">裝備效果是遊戲中的趣味加成。每場比賽採先取得 5 勝制；平手不計分。</p>
+</section>
+
+<section class="panel hidden" id="game">
+  <h2>⚔️ 第一關：猜拳挑戰</h2>
+  <div class="status">
+    <div class="stat"><span>你的勝場</span><strong id="playerScore">0</strong></div>
+    <div class="stat"><span>目前回合</span><strong id="round">1</strong></div>
+    <div class="stat"><span>電腦勝場</span><strong id="cpuScore">0</strong></div>
+  </div>
+  <div class="arena">
+    <div class="fighter"><span class="emoji" id="playerHand">❔</span><strong id="playerLabel">冒險者</strong><p>你的出拳</p></div>
+    <div class="fighter"><span class="emoji" id="cpuHand">🤖</span><strong>電腦冒險者</strong><p>神祕對手</p></div>
+  </div>
+  <h2>👇 出拳吧！</h2>
+  <div class="choices">
+    <button class="choice" data-move="rock"><span>✊</span>石頭</button>
+    <button class="choice" data-move="paper"><span>✋</span>布</button>
+    <button class="choice" data-move="scissors"><span>✌️</span>剪刀</button>
+  </div>
+  <div class="message" id="message" aria-live="polite">準備好了嗎？選擇石頭、布或剪刀！</div>
+  <div class="bottom">
+    <button class="secondary" id="gearAction">✨ 使用裝備技能</button>
+    <button class="secondary" id="replayBtn">🔄 再玩一次</button>
+    <button class="secondary" id="backBtn">🏠 回到登入</button>
+  </div>
+  <p class="note" id="gearNote">裝備技能會顯示在這裡。</p>
+</section>
+<footer>🌟 勇敢出拳，享受冒險！</footer>
+</main>
+<script>
+const moves = {
+  rock:{name:"石頭",emoji:"✊"},
+  paper:{name:"布",emoji:"✋"},
+  scissors:{name:"剪刀",emoji:"✌️"}
+};
+const setup=document.getElementById('setup'), game=document.getElementById('game');
+const gearName=document.getElementById('gearName'), playerName=document.getElementById('playerName');
+const message=document.getElementById('message'), gearAction=document.getElementById('gearAction');
+let gear='wand', name='勇者', p=0, c=0, round=1, finished=false, skillUsed=false, preview=null, shieldBoost=false;
+
+document.querySelectorAll('.equipment').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.equipment').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected'); gear=btn.dataset.gear;
+    gearName.value=btn.querySelector('strong').textContent;
+  });
+});
+document.getElementById('startBtn').addEventListener('click',()=>{
+  name=playerName.value.trim()||'勇者';
+  document.getElementById('playerLabel').textContent=name;
+  setup.classList.add('hidden'); game.classList.remove('hidden'); resetGame();
+});
+function resetGame(){
+  p=0;c=0;round=1;finished=false;skillUsed=false;preview=null;shieldBoost=false;
+  updateScores();
+  document.getElementById('playerHand').textContent='❔';
+  document.getElementById('cpuHand').textContent='🤖';
+  message.className='message';message.textContent='準備好了嗎？選擇石頭、布或剪刀！';
+  document.getElementById('gearNote').textContent='裝備技能會顯示在這裡。';
+  gearAction.disabled=false;
+  gearAction.textContent=gear==='wand'?'🪄 使用魔法預言':gear==='keyboard'?'⌨️ 啟動金色護盾':'🛡️ 使用勇氣加成';
+  document.querySelectorAll('.choice').forEach(b=>b.disabled=false);
+}
+function updateScores(){
+  document.getElementById('playerScore').textContent=p;
+  document.getElementById('cpuScore').textContent=c;
+  document.getElementById('round').textContent=round;
+}
+function randomMove(){return ['rock','paper','scissors'][Math.floor(Math.random()*3)]}
+function winner(a,b){
+  if(a===b)return 'draw';
+  if((a==='rock'&&b==='scissors')||(a==='paper'&&b==='rock')||(a==='scissors'&&b==='paper'))return 'player';
+  return 'cpu';
+}
+function play(playerMove){
+  if(finished)return;
+  const cpuMove=preview||randomMove(); preview=null;
+  document.getElementById('playerHand').textContent=moves[playerMove].emoji;
+  document.getElementById('cpuHand').textContent=moves[cpuMove].emoji;
+  let result=winner(playerMove,cpuMove);
+  if(shieldBoost && result==='draw'){result='player';shieldBoost=false;}
+  if(result==='player')p++; else if(result==='cpu')c++;
+  updateScores();
+  if(result==='player'){message.className='message win';message.textContent=`🎉 ${moves[playerMove].name}勝過${moves[cpuMove].name}！你贏得這回合！`;}
+  else if(result==='cpu'){message.className='message lose';message.textContent=`🤖 ${moves[cpuMove].name}勝過${moves[playerMove].name}，電腦拿下一分！`;}
+  else{message.className='message draw';message.textContent='🤝 平手！這回合不計分，再接再厲！';}
+  round++;
+  if(p>=5||c>=5){
+    finished=true;document.querySelectorAll('.choice').forEach(b=>b.disabled=true);gearAction.disabled=true;
+    if(p>=5){message.className='message win';message.textContent=`🏆 恭喜 ${name}！你以 ${p}：${c} 擊敗電腦，冒險成功！`;}
+    else{message.className='message lose';message.textContent=`💪 這次電腦以 ${c}：${p} 獲勝。別灰心，再玩一次挑戰成功！`;}
+  }
+  updateScores();
+}
+document.querySelectorAll('.choice').forEach(btn=>btn.addEventListener('click',()=>play(btn.dataset.move)));
+gearAction.addEventListener('click',()=>{
+  if(finished||skillUsed)return;
+  if(gear==='wand'){
+    preview=randomMove();skillUsed=true;
+    document.getElementById('gearNote').textContent=`🪄 魔法預言：電腦下一拳可能是「${moves[preview].name}」！快選擇能克制它的出拳。`;
+  }else if(gear==='keyboard'){
+    skillUsed=true;
+    document.getElementById('gearNote').textContent='⌨️ 金色護盾已啟動！這是裝飾型技能，祝你下一回合手氣大開！';
+    message.textContent='✨ 黃金鍵盤閃閃發光！繼續出拳吧！';
+  }else{
+    if(p>=c){message.textContent='🛡️ 勇氣加成需要你目前落後時才能使用喔！';return;}
+    shieldBoost=true;skillUsed=true;
+    document.getElementById('gearNote').textContent='🛡️ 勇氣加成已啟動：下一回合若平手，將算你贏得一分！';
+  }
+  if(skillUsed){gearAction.disabled=true;gearAction.textContent='✅ 本場已使用技能';}
+});
+document.getElementById('replayBtn').addEventListener('click',resetGame);
+document.getElementById('backBtn').addEventListener('click',()=>{
+  game.classList.add('hidden');setup.classList.remove('hidden');
+});
+</script>
+</body>
+</html>
